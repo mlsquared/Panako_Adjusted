@@ -525,7 +525,7 @@ public final class FileUtils {
 		if(fileSizeInBytes != 0 && fileSizeInMB < maxFileSizeInMB ){
 			fileOk = true;
 		}else{
-			String message = String.format("Could not process %s it has an unacceptable file size of %l MB  (zero or larger than  %d MB ).", file.getName(), fileSizeInMB, maxFileSizeInMB );
+			String message = String.format("Could not process %s it has an unacceptable file size of %d MB  (zero or larger than  %d MB ).", file.getName(), fileSizeInMB, maxFileSizeInMB );
 			LOG.warning(message);
 			System.err.println(message);
 		}
