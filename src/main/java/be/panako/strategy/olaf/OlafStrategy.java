@@ -41,6 +41,9 @@ import java.io.IOException;
 import java.util.*;
 import java.util.logging.Logger;
 
+// Personal import- IC
+import java.io.FileWriter;
+
 import be.panako.strategy.QueryResult;
 import be.panako.strategy.QueryResultHandler;
 import be.panako.strategy.Strategy;
@@ -96,7 +99,7 @@ public class OlafStrategy extends Strategy {
 	
 	@Override
 	public double store(String resource, String description) {
-
+		// System.out.println("Now in OlafStrat store() function");
 		OlafStorage db = getStorage();
 		
 		List<OlafFingerprint> prints = toFingerprints(resource);
@@ -109,7 +112,7 @@ public class OlafStrategy extends Strategy {
 			db.addToStoreQueue(hash, resourceID, printT1);
 		}
 		db.processStoreQueue();
-		
+
 		//store meta-data as well
 		float duration = 0;
 		if(prints.size() != 0) {
@@ -121,6 +124,8 @@ public class OlafStrategy extends Strategy {
 		}
 		int numberOfPrints = prints.size();
 		
+    	saveFingerprintsToFile(prints, resource, resourceID, duration, numberOfPrints);
+
 		db.storeMetadata(resourceID,resource,duration,numberOfPrints);
 		
 		//storage is done: 
@@ -129,6 +134,52 @@ public class OlafStrategy extends Strategy {
 		
 		return duration;
 	}
+
+	private static final String OUTPUT_DIRECTORY = System.getProperty("user.home") + "/fingerprints";
+
+	private void saveFingerprintsToFile(List<OlafFingerprint> prints, String resource, int resourceID, float duration, int numberOfPrints) {
+		try {
+			// Ensure the output directory exists
+			File outputDir = new File(OUTPUT_DIRECTORY);
+			if (!outputDir.exists()) {
+				outputDir.mkdirs();  // Create the directory if it does not exist
+        	}
+
+
+			String audioFileName = new File(resource).getName();  // Extract just the file name
+			audioFileName = audioFileName.substring(0, audioFileName.lastIndexOf('.') - 3);  // To remove the '-AE' suffix
+
+			String outputFilePath = OUTPUT_DIRECTORY + "/" + audioFileName + "_fingerprints.txt";
+
+
+			// System.out.println("Now within Olaf Strat. Is it popping up?");
+			System.out.println("Saving fingerprints for " + audioFileName + " to " + outputFilePath);
+			
+
+			try (FileWriter writer = new FileWriter(outputFilePath)) { 
+				// Write metadata for this resource at the beginning
+				writer.write("ResourceID: " + resourceID + "\n");
+				writer.write("Resource: " + resource + "\n");
+				writer.write("Duration: " + duration + "\n");
+				writer.write("Number of Prints: " + numberOfPrints + "\n");
+				writer.write("Fingerprint format: Hash, t1, f1, m1, t2, f2, m2, t3, f3, m3\n");
+				writer.write("Fingerprints:\n");
+
+				// Write info for each fingerprint. t, f, and m are Time, Frequency, and Magnitude values for each peak. 3 total.
+				for (OlafFingerprint print : prints) {
+					writer.write(String.format("%d %d %d %.2f %d %d %.2f %d %d %.2f\n",
+												print.hash(), print.t1, print.f1, print.m1, print.t2, print.f2, print.m2, print.t3, print.f3, print.m3));
+				}
+				writer.write("\n");
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		} catch (Exception e) {
+        System.err.println("Error creating output directory or writing fingerprint file.");
+        e.printStackTrace();
+    	}
+	}
+
 
 	@Override
 	public double delete(String resource) {
