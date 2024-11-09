@@ -106,12 +106,12 @@ public class OlafStrategy extends Strategy {
 		
 		int resourceID = FileUtils.getIdentifier(resource);
 		//store
-		for(OlafFingerprint print : prints) {
-			long hash = print.hash();			
-			int printT1 = print.t1;
-			db.addToStoreQueue(hash, resourceID, printT1);
-		}
-		db.processStoreQueue();
+		// for(OlafFingerprint print : prints) {
+		// 	long hash = print.hash();			
+		// 	int printT1 = print.t1;
+		// 	db.addToStoreQueue(hash, resourceID, printT1);
+		// }
+		// db.processStoreQueue();
 
 		//store meta-data as well
 		float duration = 0;
@@ -126,7 +126,7 @@ public class OlafStrategy extends Strategy {
 		
     	saveFingerprintsToFile(prints, resource, resourceID, duration, numberOfPrints);
 
-		db.storeMetadata(resourceID,resource,duration,numberOfPrints);
+		// db.storeMetadata(resourceID,resource,duration,numberOfPrints);
 		
 		//storage is done: 
 		//try to clear memory
@@ -147,7 +147,8 @@ public class OlafStrategy extends Strategy {
 
 
 			String audioFileName = new File(resource).getName();  // Extract just the file name
-			audioFileName = audioFileName.substring(0, audioFileName.lastIndexOf('.') - 3);  // To remove the '-AE' suffix
+			// Don't need this anymore. All audio file should later be renamed to remove all occurrences of -AE suffix
+			// audioFileName = audioFileName.substring(0, audioFileName.lastIndexOf('.') - 3);  // To remove the '-AE' suffix
 
 			String outputFilePath = OUTPUT_DIRECTORY + "/" + audioFileName + "_fingerprints.txt";
 
@@ -158,17 +159,23 @@ public class OlafStrategy extends Strategy {
 
 			try (FileWriter writer = new FileWriter(outputFilePath)) { 
 				// Write metadata for this resource at the beginning
-				writer.write("ResourceID: " + resourceID + "\n");
-				writer.write("Resource: " + resource + "\n");
+				// Don't really need the ResourceID, which seems to be a unique integer, and Resource, which is path to audio file. Will be replaced by 
+				// ContentID in the main python script that creates the fpt file
+				//writer.write("ResourceID: " + resourceID + "\n");
+				// writer.write("Resource: " + resource + "\n");  
 				writer.write("Duration: " + duration + "\n");
 				writer.write("Number of Prints: " + numberOfPrints + "\n");
-				writer.write("Fingerprint format: Hash, t1, f1, m1, t2, f2, m2, t3, f3, m3\n");
+				writer.write("Fingerprint format: Hash, t1, f1, m1, t2, f2, m2, t3, f3, m3, ts\n");
 				writer.write("Fingerprints:\n");
 
 				// Write info for each fingerprint. t, f, and m are Time, Frequency, and Magnitude values for each peak. 3 total.
 				for (OlafFingerprint print : prints) {
-					writer.write(String.format("%d %d %d %.2f %d %d %.2f %d %d %.2f\n",
-												print.hash(), print.t1, print.f1, print.m1, print.t2, print.f2, print.m2, print.t3, print.f3, print.m3));
+					// Using minimum of three time peaks
+					int min_time = print.t1 < print.t2 ? print.t1 : print.t2;
+					min_time = min_time < print.t3 ? min_time : print.t3;
+					int ts = (int) (blocksToSeconds(min_time) * 1000);  // Timestamp of first Peak in milliseconds
+					writer.write(String.format("%d %d %d %.2f %d %d %.2f %d %d %.2f %d\n",
+												print.hash(), print.t1, print.f1, print.m1, print.t2, print.f2, print.m2, print.t3, print.f3, print.m3, ts));
 				}
 				writer.write("\n");
 			} catch (IOException e) {
