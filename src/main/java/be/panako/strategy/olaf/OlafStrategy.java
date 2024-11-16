@@ -150,7 +150,12 @@ public class OlafStrategy extends Strategy {
 			// Don't need this anymore. All audio file should later be renamed to remove all occurrences of -AE suffix
 			// audioFileName = audioFileName.substring(0, audioFileName.lastIndexOf('.') - 3);  // To remove the '-AE' suffix
 
-			String outputFilePath = OUTPUT_DIRECTORY + "/" + audioFileName + "_fingerprints.txt";
+			int dotIndex = audioFileName.lastIndexOf('.');
+			if (dotIndex > 0) {  // Ensure there’s actually a dot in the filename
+				audioFileName = audioFileName.substring(0, dotIndex);  // Removes extension
+			}
+
+			String outputFilePath = OUTPUT_DIRECTORY + "/" + audioFileName + ".txt";
 
 
 			// System.out.println("Now within Olaf Strat. Is it popping up?");
