@@ -135,8 +135,7 @@ public class OlafStrategy extends Strategy {
 		return duration;
 	}
 
-	private static final String OUTPUT_DIRECTORY = System.getProperty("user.home") + "/" +
-    (System.getenv("FINGERPRINTS_DIRECTORY") != null ? System.getenv("FINGERPRINTS_DIRECTORY") : "fingerprints");
+	private static final String OUTPUT_DIRECTORY = (System.getenv("FINGERPRINTS_DIRECTORY") != null ? System.getenv("FINGERPRINTS_DIRECTORY") : "fingerprints");
 
 
 	private void saveFingerprintsToFile(List<OlafFingerprint> prints, String resource, int resourceID, float duration, int numberOfPrints) {
